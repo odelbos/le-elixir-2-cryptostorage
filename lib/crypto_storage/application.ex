@@ -10,6 +10,7 @@ defmodule CryptoStorage.Application do
     children = [
       # Starts a worker by calling: CryptoStorage.Worker.start_link(arg)
       # {CryptoStorage.Worker, arg}
+      {Plug.Cowboy, scheme: :http, plug: CryptoStorage.Router, options: [port: 4554]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
