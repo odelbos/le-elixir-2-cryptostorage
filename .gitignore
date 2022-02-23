@@ -38,5 +38,8 @@ BACK.*
 .idea
 .vscode
 
-# vim artifacts
+# Ignore Vim
 *.swp
+
+# Ignore Emacs
+.#*
