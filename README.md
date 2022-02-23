@@ -1,21 +1,11 @@
-# CryptoStorage
+# Synopsis
 
-**TODO: Add description**
+This repository is an Elixir learning exercise.
 
-## Installation
+**Disclaimer : Do not use this code in production.**
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `crypto_storage` to your list of dependencies in `mix.exs`:
+## Subject of the exercise
 
-```elixir
-def deps do
-  [
-    {:crypto_storage, "~> 0.1.0"}
-  ]
-end
-```
+The subject of this exercise is to play with `Cowboy`, `Plug` and `CryptoBlocks`
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/crypto_storage>.
-
+Send files to the webserver and store them encrypted in many blocks.
