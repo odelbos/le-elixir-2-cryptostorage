@@ -25,6 +25,9 @@ crypto_storage-*.tar
 # Temporary files, for example, from tests.
 /tmp/
 
+# Ignore Config file
+/config/settings.json
+
 # Ignore Working files
 OLD.*
 ORIG.*
