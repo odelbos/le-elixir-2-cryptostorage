@@ -23,7 +23,8 @@ defmodule CryptoStorage.MixProject do
   defp deps do
     [
       {:cowboy, "~> 2.9"},
-      {:plug_cowboy, "~> 2.5"}
+      {:plug_cowboy, "~> 2.5"},
+      {:jason, "~> 1.3"}
     ]
   end
 end
