@@ -57,10 +57,19 @@ You should receive a JSON reponse with the `id` of the stored file, ex :
 {"id","e425c0d8983da48cecc5a0eb04620671"}
 ```
 
+## Download file from server
+
+```sh
+curl -OJ -X GET localhost:4554/id/e425c0d8983da48cecc5a0eb04620671
+```
+
 # Roadmap
 
 - [x] Simple Router (with "/")
 - [X] Add simple config system (basic KV genserver)
 - [X] Basic endpoint to send file
-- [ ] Endpoint to get file
+- [X] Endpoint to download file
+- [ ] Encrypt the blocks description
+- [ ] Setup for master key
+- [ ] Filename management
 - [ ] Error handling
