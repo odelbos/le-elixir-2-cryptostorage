@@ -28,6 +28,12 @@ crypto_storage-*.tar
 # Ignore Config file
 /config/settings.json
 
+# Ignore Storage
+/storage/blocks/*
+!/storage/blocks/.keep
+/storage/files/*
+!/storage/files/.keep
+
 # Ignore Working files
 OLD.*
 ORIG.*
