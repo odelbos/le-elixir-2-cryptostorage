@@ -26,6 +26,28 @@ defmodule CryptoStorage.Router do
     |> send_resp(200, content)
   end
 
+  get "/id/:id" do
+    # Read the blocks description
+    files_path = ConfigKV.get :files_path
+    filepath = Path.join [files_path, id]
+
+    if File.exists? filepath do
+      {:ok, data} = File.read filepath
+      # Unpack blocks
+      blocks = CryptoBlocks.Utils.unpack data
+
+      new_conn = conn
+        |> put_resp_header("Content-Type", "application/octet-stream")
+        |> put_resp_header("Content-Disposition","attachment; filename=\"#{id}\"")
+        |> send_chunked(200)
+
+      send_blocks new_conn, blocks
+    else
+      conn
+        |> send_resp(404, "404 Not Found")
+    end
+  end
+
   post "/" do
     #
     # TODO : How to compute the block size ?
@@ -110,5 +132,17 @@ defmodule CryptoStorage.Router do
     new_hstate = :crypto.hash_update hstate, data
     result = Plug.Conn.read_body conn, length: rsize, read_length: rsize
     do_make_blocks result, new_struct, new_hstate, count + data_size
+  end
+
+  defp send_blocks(conn, []) do
+    conn
+  end
+
+  defp send_blocks(conn, [block | rest]) do
+    # Read block
+    blocks_path = ConfigKV.get :blocks_path
+    data = CryptoBlocks.read_block block, blocks_path
+    {:ok, new_conn} = chunk conn, data
+    send_blocks new_conn, rest
   end
 end
