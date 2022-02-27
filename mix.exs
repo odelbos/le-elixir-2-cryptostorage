@@ -11,7 +11,6 @@ defmodule CryptoStorage.MixProject do
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
       extra_applications: [:logger],
@@ -19,12 +18,12 @@ defmodule CryptoStorage.MixProject do
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
       {:cowboy, "~> 2.9"},
       {:plug_cowboy, "~> 2.5"},
-      {:jason, "~> 1.3"}
+      {:jason, "~> 1.3"},
+      {:crypto_blocks, git: "https://github.com/odelbos/le-elixir-1-cryptoblocks.git"}
     ]
   end
 end
