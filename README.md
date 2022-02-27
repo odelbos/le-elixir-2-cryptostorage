@@ -69,6 +69,7 @@ curl -OJ -X GET localhost:4554/id/e425c0d8983da48cecc5a0eb04620671
 - [X] Add simple config system (basic KV genserver)
 - [X] Basic endpoint to send file
 - [X] Endpoint to download file
+- [ ] Compute optimal block size based on content-length
 - [ ] Encrypt the blocks description
 - [ ] Setup for master key
 - [ ] Filename management
