@@ -1,3 +1,8 @@
+#
+# The best way to handle a state is using an Agent.
+# For this learning exercise I would like to write a basic
+# key/value genserver.
+#
 defmodule CryptoStorage.ConfigKV do
   use GenServer
 
