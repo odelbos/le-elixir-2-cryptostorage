@@ -1,5 +1,7 @@
 defmodule CryptoStorage.Router do
 
+  require Logger
+
   use Plug.Router
 
   alias CryptoStorage.ConfigKV
@@ -58,9 +60,22 @@ defmodule CryptoStorage.Router do
     blocks_path = ConfigKV.get :blocks_path
     files_path = ConfigKV.get :files_path
 
+    Logger.debug "Content-Length : #{content_length} bytes"
+    Logger.debug "Block size : #{block_size} bytes"
+
     # Read the request body and generate the encrypted blocks
     struct = %CryptoBlocks{storage: blocks_path, size: block_size}
-    {:ok, blocks, new_conn, _hash, _read_bytes} = make_blocks conn, struct
+    {:ok, blocks, new_conn, hash, read_bytes} = make_blocks conn, struct
+
+    Logger.debug "Total read : #{read_bytes} bytes"
+    Logger.debug "Nb blocks  : #{length(blocks)}"
+
+    # Get a hash of the binary stored inside blocks
+    blocks_hash = CryptoBlocks.hash blocks, blocks_path
+
+    Logger.debug "File hash   : #{hash}"
+    Logger.debug "Blocks hash : #{blocks_hash}"
+    if blocks_hash == hash, do: Logger.debug "Hash are matching !"
 
     #
     # TODO : if read_bytes != content_length
@@ -75,6 +90,8 @@ defmodule CryptoStorage.Router do
     id = generate_id files_path
     filepath = Path.join [files_path, id]
     File.write filepath, packed_blocks, [:binary, :raw]
+
+    Logger.info "Post file : #{id}"
 
     new_conn
       |> put_resp_content_type("application/json")
@@ -99,7 +116,7 @@ defmodule CryptoStorage.Router do
   defp make_blocks(conn, struct) do
     rsize = ConfigKV.get :read_size
     # Compute a sha256 of the received data from the conn
-    # (usefull to veirfy the integrety of the blocks)
+    # ()usefull to veirfy the integrety of the blocks)
     hstate = :crypto.hash_init :sha256
     result = read_body conn, length: rsize, read_length: rsize
     do_make_blocks result, struct, hstate, 0
