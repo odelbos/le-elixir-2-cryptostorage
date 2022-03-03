@@ -3,6 +3,7 @@ defmodule CryptoStorage.Router do
   use Plug.Router
 
   alias CryptoStorage.ConfigKV
+  alias CryptoStorage.Utils
 
   plug :match
   plug :dispatch
@@ -49,38 +50,25 @@ defmodule CryptoStorage.Router do
   end
 
   post "/" do
-    #
-    # TODO : How to compute the block size ?
-    # (based on the content-length of the file)
-    #
-    block_size = ConfigKV.get :block_size
+    # Compute block size based on content-length
+    [value | _] = get_req_header conn, "content-length"
+    content_length = String.to_integer value
+    block_size = Utils.compute_block_size content_length
+    # Get some config values
     blocks_path = ConfigKV.get :blocks_path
     files_path = ConfigKV.get :files_path
 
-    content_length = get_req_header conn, "content-length"
-
+    # Read the request body and generate the encrypted blocks
     struct = %CryptoBlocks{storage: blocks_path, size: block_size}
-
-    {:ok, blocks, new_conn, hash, count} = make_blocks conn, struct, 0
-
-    size = CryptoBlocks.bytes blocks, blocks_path
-    blocks_hash = CryptoBlocks.hash blocks, blocks_path
+    {:ok, blocks, new_conn, _hash, _read_bytes} = make_blocks conn, struct
 
     #
-    # TODO : if size != content_length
+    # TODO : if read_bytes != content_length
+
+    # TODO : if blocks_hash != hash
     #
 
-    IO.puts "Content Length : #{content_length}"
-    IO.puts "Read count : #{count}"
-    IO.puts "Blocks size : #{size}"
-    IO.puts "Blocks hash : #{blocks_hash}"
-    IO.puts "Blocks count : #{length(blocks)}"
-    IO.puts "Original hash : #{hash}"
-    if blocks_hash == hash do
-      IO.puts "--hash are matching !--"
-    end
-
-    # Pack and encrypt the blocks description
+    # Pack the blocks description
     packed_blocks = CryptoBlocks.Utils.pack blocks
 
     # Write blocks description to disk
@@ -106,40 +94,41 @@ defmodule CryptoStorage.Router do
     end
   end
 
-  defp make_blocks(conn, struct, count) do
+  # -----
+
+  defp make_blocks(conn, struct) do
     rsize = ConfigKV.get :read_size
-    # Will compute a sha256 of the received data from the conn
-    # It will allow to veirfy the integrety of the saved blocks
+    # Compute a sha256 of the received data from the conn
+    # (usefull to veirfy the integrety of the blocks)
     hstate = :crypto.hash_init :sha256
-    result = Plug.Conn.read_body conn, length: rsize, read_length: rsize
-    do_make_blocks result, struct, hstate, count
+    result = read_body conn, length: rsize, read_length: rsize
+    do_make_blocks result, struct, hstate, 0
   end
 
-  defp do_make_blocks({:ok, data, conn}, struct, hstate, count) do
+  defp do_make_blocks({:ok, data, conn}, struct, hstate, read_bytes) do
     data_size = byte_size data
     {:ok, blocks} = struct |> CryptoBlocks.write(data) |> CryptoBlocks.final()
     hash = hstate
       |> :crypto.hash_update(data)
       |> :crypto.hash_final()
       |> Base.encode16(case: :lower)
-    {:ok, blocks, conn, hash, count + data_size}
+    {:ok, blocks, conn, hash, read_bytes + data_size}
   end
 
-  defp do_make_blocks({:more, data, conn}, struct, hstate, count) do
+  defp do_make_blocks({:more, data, conn}, struct, hstate, read_bytes) do
     rsize = ConfigKV.get :read_size
     data_size = byte_size data
     new_struct = CryptoBlocks.write struct, data
     new_hstate = :crypto.hash_update hstate, data
-    result = Plug.Conn.read_body conn, length: rsize, read_length: rsize
-    do_make_blocks result, new_struct, new_hstate, count + data_size
+    result = read_body conn, length: rsize, read_length: rsize
+    do_make_blocks result, new_struct, new_hstate, read_bytes + data_size
   end
 
-  defp send_blocks(conn, []) do
-    conn
-  end
+  # -----
+
+  defp send_blocks(conn, []), do: conn
 
   defp send_blocks(conn, [block | rest]) do
-    # Read block
     blocks_path = ConfigKV.get :blocks_path
     data = CryptoBlocks.read_block block, blocks_path
     {:ok, new_conn} = chunk conn, data
