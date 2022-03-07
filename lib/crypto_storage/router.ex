@@ -2,9 +2,11 @@ defmodule CryptoStorage.Router do
   require Logger
   use Plug.Router
 
+  alias CryptoStorage.Plug.VerifySetup
   alias CryptoStorage.ConfigKV
   alias CryptoStorage.Utils
 
+  plug VerifySetup
   plug :match
   plug :dispatch
 
