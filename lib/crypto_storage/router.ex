@@ -1,7 +1,5 @@
 defmodule CryptoStorage.Router do
-
   require Logger
-
   use Plug.Router
 
   alias CryptoStorage.ConfigKV
@@ -25,8 +23,55 @@ defmodule CryptoStorage.Router do
       |> Kernel.<>("blocks path : #{ConfigKV.get :blocks_path}\n")
       |> Kernel.<>("files path  : #{ConfigKV.get :files_path}\n")
     conn
-    |> put_resp_content_type("text/plain")
-    |> send_resp(200, content)
+      |> put_resp_content_type("text/plain")
+      |> send_resp(200, content)
+  end
+
+  post "/setup" do
+    {:ok, payload, new_conn} = read_body conn
+
+    try do
+      [b64_storage_key, b64_time, b64_sig] = String.split payload, "."
+      sig = Base.decode64! b64_sig, padding: false
+
+      # Get public key
+      der_pub_key = ConfigKV.get(:pub_key) |> Base.decode64!(padding: false)
+      pub_key = :public_key.der_decode :RSAPublicKey, der_pub_key
+
+      # Veirfy data signature
+      data = b64_storage_key <> "." <> b64_time
+      if :public_key.verify data, :sha256, sig, pub_key do
+        time = b64_time |> Base.decode64!(padding: false) |> String.to_integer()
+        # Verify if timing is ok
+        if time - :os.system_time(:seconds) <= 0 do
+          raise "Bad timing"
+        end
+
+        # Decrypt and store the storage key in config
+        # e_storage_key = Base.decode64! b64_storage_key, padding: false
+        # storage_key = :public_key.decrypt_public e_storage_key, pub_key
+        storage_key = Base.decode64!(b64_storage_key, padding: false)
+          |> :public_key.decrypt_public(pub_key)
+
+        ConfigKV.set :storage_key, storage_key
+
+        Logger.info "Setup done"
+        new_conn
+          |> put_resp_content_type("text/plain")
+          |> send_resp(:ok, "ok")
+      else
+        Logger.error "Setup error - (bad signature)"
+        new_conn
+          |> put_resp_content_type("text/plain")
+          |> send_resp(:unprocessable_entity, "Unprocessable Entity")
+      end
+    rescue
+      _e ->
+        Logger.error "Setup error"
+        new_conn
+          |> put_resp_content_type("text/plain")
+          |> send_resp(:unprocessable_entity, "Unprocessable Entity")
+    end
   end
 
   get "/id/:id" do
