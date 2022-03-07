@@ -2,7 +2,7 @@ defmodule CryptoStorage.Plug.VerifySetup do
   require Logger
 
   import Plug.Conn
-  alias CryptoStorage.ConfigKV
+  alias CryptoStorage.Settings
 
   def init(options), do: options
 
@@ -15,7 +15,7 @@ defmodule CryptoStorage.Plug.VerifySetup do
   # ------
 
   defp check_pub_key(conn) do
-    if ConfigKV.get(:pub_key) == nil do
+    if Settings.get(:pub_key) == nil do
       Logger.warn "Public key is missing !"
       conn
         |> put_resp_content_type("text/plain")
@@ -29,7 +29,7 @@ defmodule CryptoStorage.Plug.VerifySetup do
   # ------
 
   defp check_storage_key(conn, "/setup") do
-    storage_key = ConfigKV.get :storage_key
+    storage_key = Settings.get :storage_key
     unless storage_key == nil do
       Logger.warn "Access to setup forbidden"
       # Storage key is already configured, we can't override the settings.
@@ -45,7 +45,7 @@ defmodule CryptoStorage.Plug.VerifySetup do
   end
 
   defp check_storage_key(conn, _path) do
-    storage_key = ConfigKV.get :storage_key
+    storage_key = Settings.get :storage_key
     if storage_key == nil do
       Logger.warn "Access to any path are prohibed"
       conn

@@ -7,7 +7,7 @@ defmodule CryptoStorage.Application do
   def start(_type, _args) do
     children = [
       {Plug.Cowboy, scheme: :http, plug: CryptoStorage.Router, options: [port: 4554]},
-      {CryptoStorage.ConfigKV, []}
+      {CryptoStorage.Settings, []}
     ]
 
     opts = [strategy: :one_for_one, name: CryptoStorage.Supervisor]

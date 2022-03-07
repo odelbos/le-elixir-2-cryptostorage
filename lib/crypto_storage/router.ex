@@ -3,7 +3,7 @@ defmodule CryptoStorage.Router do
   use Plug.Router
 
   alias CryptoStorage.Plug.VerifySetup
-  alias CryptoStorage.ConfigKV
+  alias CryptoStorage.Settings
   alias CryptoStorage.Utils
 
   plug VerifySetup
@@ -16,14 +16,14 @@ defmodule CryptoStorage.Router do
       |> send_resp(200, "Welcome to Crypto Storage!")
   end
 
-  # TODO : Temporary route to test ConfigKV
+  # TODO : Temporary route to test Settings
   # (it will be removed soon)
   get "/config" do
     content = ""
-      |> Kernel.<>("read size   : #{ConfigKV.get :read_size}\n")
-      |> Kernel.<>("blocksize   : #{ConfigKV.get :block_size}\n")
-      |> Kernel.<>("blocks path : #{ConfigKV.get :blocks_path}\n")
-      |> Kernel.<>("files path  : #{ConfigKV.get :files_path}\n")
+      |> Kernel.<>("read size   : #{Settings.get :read_size}\n")
+      |> Kernel.<>("blocksize   : #{Settings.get :block_size}\n")
+      |> Kernel.<>("blocks path : #{Settings.get :blocks_path}\n")
+      |> Kernel.<>("files path  : #{Settings.get :files_path}\n")
     conn
       |> put_resp_content_type("text/plain")
       |> send_resp(200, content)
@@ -37,7 +37,7 @@ defmodule CryptoStorage.Router do
       sig = Base.decode64! b64_sig, padding: false
 
       # Get public key
-      der_pub_key = ConfigKV.get(:pub_key) |> Base.decode64!(padding: false)
+      der_pub_key = Settings.get(:pub_key) |> Base.decode64!(padding: false)
       pub_key = :public_key.der_decode :RSAPublicKey, der_pub_key
 
       # Veirfy data signature
@@ -55,7 +55,7 @@ defmodule CryptoStorage.Router do
         storage_key = Base.decode64!(b64_storage_key, padding: false)
           |> :public_key.decrypt_public(pub_key)
 
-        ConfigKV.set :storage_key, storage_key
+        Settings.set :storage_key, storage_key
 
         Logger.info "Setup done"
         new_conn
@@ -78,7 +78,7 @@ defmodule CryptoStorage.Router do
 
   get "/id/:id" do
     # Read the blocks description
-    files_path = ConfigKV.get :files_path
+    files_path = Settings.get :files_path
     filepath = Path.join [files_path, id]
 
     if File.exists? filepath do
@@ -104,8 +104,8 @@ defmodule CryptoStorage.Router do
     content_length = String.to_integer value
     block_size = Utils.compute_block_size content_length
     # Get some config values
-    blocks_path = ConfigKV.get :blocks_path
-    files_path = ConfigKV.get :files_path
+    blocks_path = Settings.get :blocks_path
+    files_path = Settings.get :files_path
 
     Logger.debug "Content-Length : #{content_length} bytes"
     Logger.debug "Block size : #{block_size} bytes"
@@ -161,7 +161,7 @@ defmodule CryptoStorage.Router do
   # -----
 
   defp make_blocks(conn, struct) do
-    rsize = ConfigKV.get :read_size
+    rsize = Settings.get :read_size
     # Compute a sha256 of the received data from the conn
     # ()usefull to veirfy the integrety of the blocks)
     hstate = :crypto.hash_init :sha256
@@ -180,7 +180,7 @@ defmodule CryptoStorage.Router do
   end
 
   defp do_make_blocks({:more, data, conn}, struct, hstate, read_bytes) do
-    rsize = ConfigKV.get :read_size
+    rsize = Settings.get :read_size
     data_size = byte_size data
     new_struct = CryptoBlocks.write struct, data
     new_hstate = :crypto.hash_update hstate, data
@@ -193,7 +193,7 @@ defmodule CryptoStorage.Router do
   defp send_blocks(conn, []), do: conn
 
   defp send_blocks(conn, [block | rest]) do
-    blocks_path = ConfigKV.get :blocks_path
+    blocks_path = Settings.get :blocks_path
     data = CryptoBlocks.read_block block, blocks_path
     {:ok, new_conn} = chunk conn, data
     send_blocks new_conn, rest

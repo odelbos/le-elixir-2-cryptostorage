@@ -1,9 +1,9 @@
 #
 # The best way to handle a state is using an Agent.
 # For this learning exercise I would like to write a basic
-# key/value genserver.
+# key/value genserver to store the settings.
 #
-defmodule CryptoStorage.ConfigKV do
+defmodule CryptoStorage.Settings do
   use GenServer
 
   def start_link(_arg) do
