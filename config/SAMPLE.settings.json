@@ -1,6 +1,4 @@
 {
-  "read_size": 1048576,
-  "block_size": 524288,
   "blocks_path": "/...absolute-path...",
   "files_path": "/...absolute-path...",
   "pub_key": "...rsa-pub-key..."

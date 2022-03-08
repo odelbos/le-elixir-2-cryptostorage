@@ -21,8 +21,6 @@ defmodule CryptoStorage.Router do
   # (it will be removed soon)
   get "/config" do
     content = ""
-      |> Kernel.<>("read size   : #{Settings.get :read_size}\n")
-      |> Kernel.<>("blocksize   : #{Settings.get :block_size}\n")
       |> Kernel.<>("blocks path : #{Settings.get :blocks_path}\n")
       |> Kernel.<>("files path  : #{Settings.get :files_path}\n")
     conn
@@ -172,11 +170,10 @@ defmodule CryptoStorage.Router do
   # -----
 
   defp make_blocks(conn, struct) do
-    rsize = Settings.get :read_size
     # Compute a sha256 of the received data from the conn
-    # ()usefull to veirfy the integrety of the blocks)
+    # (usefull to veirfy the integrety of the blocks)
     hstate = :crypto.hash_init :sha256
-    result = read_body conn, length: rsize, read_length: rsize
+    result = read_body conn
     do_make_blocks result, struct, hstate, 0
   end
 
@@ -191,11 +188,10 @@ defmodule CryptoStorage.Router do
   end
 
   defp do_make_blocks({:more, data, conn}, struct, hstate, read_bytes) do
-    rsize = Settings.get :read_size
     data_size = byte_size data
     new_struct = CryptoBlocks.write struct, data
     new_hstate = :crypto.hash_update hstate, data
-    result = read_body conn, length: rsize, read_length: rsize
+    result = read_body conn
     do_make_blocks result, new_struct, new_hstate, read_bytes + data_size
   end
 
