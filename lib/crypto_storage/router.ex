@@ -74,7 +74,7 @@ defmodule CryptoStorage.Router do
     end
   end
 
-  get "/id/:id" do
+  get "/get/:id" do
     try do
       # Read blocks description
       files_path = Settings.get :files_path
