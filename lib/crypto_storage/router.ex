@@ -107,7 +107,7 @@ defmodule CryptoStorage.Router do
     end
   end
 
-  post "/" do
+  post "/store" do
     # Compute block size based on content-length
     [value | _] = get_req_header conn, "content-length"
     content_length = String.to_integer value
