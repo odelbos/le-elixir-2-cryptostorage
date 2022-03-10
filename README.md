@@ -45,13 +45,13 @@ Edit the `settings.json` file to suit you need, ie :
 
 ### Generate RSA keys and AES key.
 
-We use the `crypto_storage_cli` project to generate the RSA and AES keys.  
+We use the [StorageManager](https://github.com/odelbos/le-elixir-3-storagemanager) CLI project to generate the RSA and AES keys.  
 Also the CLI is used to send the AES storage key to the web server.
 
-See the following [StorageManager](http://wait.com) repository for more details.
+See the following [StorageManager](https://github.com/odelbos/le-elixir-3-storagemanager) repository for more details.
 
 ```sh
-./storage_mnager add --name <server_name> --url http://localhost:4554/setup
+./storage_manager add --name <server_name> --url http://localhost:4554/setup
 ```
 
 Get the RSA public key and paste it into the settings.json.
@@ -110,8 +110,6 @@ sha256sum ./tmp/file-9mb.bin
 sha256sum ./e425c0d8983da48cecc5a0eb04620671
 ```
 
-
-
 # Roadmap
 
 - [X] Simple Router (with "/")
@@ -123,3 +121,4 @@ sha256sum ./e425c0d8983da48cecc5a0eb04620671
 - [X] Setup for master key
 - [ ] Filename management
 - [ ] Error handling
+- [ ] Tests
